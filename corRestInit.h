@@ -84,10 +84,10 @@ extern int corRestListen(const char* host, unsigned short port, CorRestServiceSi
 //
 // corRestHttpsServerCredentialsSet - serve HTTPS instead of HTTP
 //
-// Call before corRestInit with the PEM contents (not file paths) of the private
+// Call before corRestStart with the PEM contents (not file paths) of the private
 // key and certificate; the server is then started with TLS enabled. NULL (the
-// default) keeps it on plain HTTP. Used by TLS test receivers (e.g. ftClient),
-// not by the broker.
+// default) keeps it on plain HTTP. Used by the broker for --https and by TLS
+// test receivers (e.g. ftClient).
 //
 // ⚠️ The BUILT-IN server has no TLS, and corRestInit REFUSES to start rather
 // than quietly serving the port in the clear. Build with COR_HTTP_SERVER=mhd

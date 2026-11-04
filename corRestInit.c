@@ -61,10 +61,10 @@ static inline CorRestServiceVector* routesOf(void)
 //
 // HTTPS server credentials (PEM contents, NULL == plain HTTP)
 //
-// The broker listens over plain HTTP and never sets these. A test server such
-// as ftClient that must receive notifications over TLS calls
+// Set by the broker for --https (--key, --cert), and by a test server such as
+// ftClient that must receive notifications over TLS: each calls
 // corRestHttpsServerCredentialsSet() with the key+certificate PEM before
-// corRestInit; the backend is then started with TLS enabled - and a backend
+// corRestStart; the backend is then started with TLS enabled - and a backend
 // that has no TLS refuses to start rather than serving the port in the clear.
 //
 static char* httpsServerKey  = NULL;
