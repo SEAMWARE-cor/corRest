@@ -1604,7 +1604,11 @@ static int routesBuild(CorRestServiceVector* routeV, CorRestServiceSimplified se
       optService.verb            = CorVerbOptions;
       optService.url             = serviceV[ix].url;
       optService.serviceRoutine  = optionsHandler;
-      optService.supportedParams = 0;
+      // A preflight (CORS) carries the URL of the request it asks for - its URL parameters too: none is
+      // checked here, the request itself checks them. 0 refused every preflight of a URL with a query (a
+      // browser's batch upsert ?options=replace, a GET with type=...) - 400, and the browser never sent the
+      // request (corHome, 11-09).
+      optService.supportedParams = ~(uint64_t)0;
 
       servicePrepare(&optSv->serviceV[optSv->services], &optService);
       optSv->services++;
