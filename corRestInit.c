@@ -34,6 +34,7 @@
 #include "corRest/corRestBackend.h"       // corRestBackendStart, corRestBackendLoops, corRestBackendResume
 #include "corRest/corRestInit.h"          // Own interface
 #include "corRest/corRestUrlValueEncode.h"          // corRestUrlValueDecode
+#include "corRest/corRestInHeader.h"                // corRestInHeader
 
 
 
@@ -443,7 +444,16 @@ void corRestProcessRequest(void)
   // Admission (corRestSetAdmitHook) - before anything is done for the request: a client that is not
   // let in learns nothing from a 404/405/415 and costs no parse
   //
-  if ((corRestAdmitHookF != NULL) && (corRest.selfForwardDepth == 0) && (corRestAdmitHookF() == false))
+  // A CORS preflight is not admitted - it is answered: a browser never sends credentials on one (Fetch,
+  // CORS-preflight request), and a preflight that is not a 2xx stops the request it asks for. It reveals the
+  // route's methods only; the request itself, when the browser sends it, is admitted as any other.
+  //
+  bool corsPreflight = (corRestCors.allowOrigin != NULL)                         &&
+                       (corRest.in.verb == CorVerbOptions)                       &&
+                       (corRestInHeader("Origin") != NULL)                       &&
+                       (corRestInHeader("Access-Control-Request-Method") != NULL);
+
+  if ((corRestAdmitHookF != NULL) && (corRest.selfForwardDepth == 0) && (corsPreflight == false) && (corRestAdmitHookF() == false))
     goto respond;
 
   // § 6.3.4 — Unsupported Media Type. POST / PATCH / PUT on a body-bearing
