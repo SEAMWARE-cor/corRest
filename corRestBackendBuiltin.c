@@ -784,14 +784,18 @@ int corRestBackendStart(unsigned short port, int poolSize, char* keyPem, char* c
   CorHttpListenOptions listenOptions = { NULL, false, false };
   CorHttpListenOptions handedOptions = { NULL, false, true };
 
-  for (int ix = 0; ix < corHttpLoops; ix++)
+  //
+  // ⭐ The listening loop LAST: the port opens when the server is a server. Loop 0 first opened it and the
+  // others were set up after - a client connecting then (a readiness probe, a test harness) waited for them.
+  //
+  for (int ix = corHttpLoops - 1; ix >= 0; ix--)
   {
     if (corHttpInitOptions(&corHttpServerV[ix], port, (ix == 0) ? &listenOptions : &handedOptions, perLoop, httpRequestCb) != CorHttpOk)
     {
       fprintf(stderr, "corRestInit: the built-in HTTP server failed to listen on port %d: %s\n", port, strerror(errno));
 
       // Undo the ones that did come up - a half-listening server is not a server.
-      for (int done = 0; done < ix; done++)
+      for (int done = ix + 1; done < corHttpLoops; done++)
         corHttpRelease(&corHttpServerV[done]);
 
       return -1;
