@@ -304,6 +304,7 @@ extern int                corRestClientUrlParse(CorRestClientRequest* req);
 //
 extern int   corRestClientTlsInit(void);
 extern void  corRestClientTlsInsecureSet(bool onoff);
+extern bool  corRestClientTlsPinSet(const char* sha256hex);    // one certificate trusted, by its SHA-256 - corRestClientTls.c
 extern int   corRestClientTlsConnect(CorRestClientConn* conn);
 extern int   corRestClientTlsPending(CorRestClientConn* conn);
 extern int   corRestClientTlsRead(CorRestClientConn* conn, char* buf, int len);
