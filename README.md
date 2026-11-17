@@ -124,6 +124,26 @@ void                  corRestClientMultiDestroy(CorRestClientMulti* multi);
 A connection pool (`corRestClientPool*`) and an OpenSSL TLS transport
 (`corRestClientTls*`) sit underneath for keep-alive and `https://`.
 
+### Access tokens (JWT)
+
+```c
+CorRestJwtCheck corRestJwtVerify(const char* token, const CorRestJwtExpect* expectP, CorAlloc* kaP, CorNode** claimsPP);
+const char*     corRestJwtCheckString(CorRestJwtCheck check);
+bool            corRestJwkLoad(char* jwksText, void (*changed)(void), char* errorBuf, int errorBufSize);
+int             corRestJwkCount(void);
+void            corRestJwkRelease(void (*changed)(void));
+char*           corRestFetch(const char* where, CorAlloc* kaP, char* errorBuf, int errorBufSize);
+void            corRestJwtCacheInit(void (*ref)(void* identity), void (*unref)(void* identity));
+void*           corRestJwtCacheGet(const char* token, int len);
+```
+
+A JWT (RFC 7519, compact JWS) checked: the signature - RS256 or ES256 - against a JWK Set (RFC 7517), then
+`exp`, `nbf`, `iss`, `aud`. The key set is one per process, replaced whole by `corRestJwkLoad` (a refresh thread)
+while other threads verify against it. `corRestFetch` reads a JWK Set (or any document) from `http(s)://`, `file://`
+or a path - blocking, never on a request's path. `corRestJwtCache*` keeps the tokens checked already, each with the
+application's identity for it; emptied when the key set changes. Left out with `COR_WITH_JWT=0`. Used by coraine's
+auth plugins and corCep.
+
 ### HTTP proxy
 
 ```c
