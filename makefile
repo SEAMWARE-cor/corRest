@@ -122,7 +122,22 @@ ifneq ($(COR_WITH_STREAM),1)
   endif
 endif
 
-CFLAGS        = -O2 -Wall -Werror -Wundef -fPIC -fstack-protector-all $(DFLAGS) $(HTTP_SERVER_FLAGS) -DCOR_WITH_COR_PROTOCOL=$(COR_WITH_COR_PROTOCOL) -DCOR_WITH_CLIENT_PROXY=$(COR_WITH_CLIENT_PROXY) -DCOR_WITH_STREAM=$(COR_WITH_STREAM) $(INCLUDE) -MMD -MP $(EXTRA_CFLAGS)
+#
+# COR_WITH_JWT - 1 | 0. An access token checked (corRestJwt.h): a JWT, RS256 / ES256, against a JWK Set
+# (corRestJwk.h, libcrypto), the tokens checked already (corRestJwtCache.h), and a JWK Set fetched
+# (corRestFetch.h). 0 leaves the four files out, and their functions with them.
+#
+COR_WITH_JWT ?= 1
+
+ifeq ($(COR_WITH_JWT),1)
+  JWT_SOURCES = corRestJwt.c corRestJwk.c corRestJwtCache.c corRestFetch.c
+else ifeq ($(COR_WITH_JWT),0)
+  JWT_SOURCES =
+else
+  $(error COR_WITH_JWT must be 1 or 0, not '$(COR_WITH_JWT)')
+endif
+
+CFLAGS        = -O2 -Wall -Werror -Wundef -fPIC -fstack-protector-all $(DFLAGS) $(HTTP_SERVER_FLAGS) -DCOR_WITH_COR_PROTOCOL=$(COR_WITH_COR_PROTOCOL) -DCOR_WITH_CLIENT_PROXY=$(COR_WITH_CLIENT_PROXY) -DCOR_WITH_STREAM=$(COR_WITH_STREAM) -DCOR_WITH_JWT=$(COR_WITH_JWT) $(INCLUDE) -MMD -MP $(EXTRA_CFLAGS)
 LIB_SOURCES   = corRestInit.c           \
                 $(HTTP_SERVER_SOURCE)   \
                 corMimeType.c           \
@@ -147,7 +162,8 @@ LIB_SOURCES   = corRestInit.c           \
                 corRestClientParse.c    \
                 corRestClientTls.c      \
                 corRestClientMulti.c    \
-                $(CLIENT_PROXY_SOURCE)
+                $(CLIENT_PROXY_SOURCE)  \
+                $(JWT_SOURCES)
 
 #
 # BUILD - which flavour of build this is, and where its objects live.
