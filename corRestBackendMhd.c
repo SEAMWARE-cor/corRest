@@ -825,14 +825,15 @@ int corRestBackendStart(unsigned short port, int poolSize, char* keyPem, char* c
   // memory: corRestConnectionMemorySet's, else libmicrohttpd's own default, 32 kB.
   //
   //
-  // ⚠️ poll, NOT epoll. libmicrohttpd's epoll mode (MHD_USE_EPOLL, edge-triggered) loses read events when a
-  // few hundred connections are opened at once: with 256 (also 257, 512 - not 250 or 300) every socket
-  // held an unread request while the I/O thread slept in epoll_wait until the clients gave up - ~500
-  // req/s instead of 175 000. libmicrohttpd's own, 1.0.2 and 1.0.10 alike: a 30-line server with these
-  // flags and an instant answer does it too. Poll mode never did, 16 to 2000 connections, and is as fast
-  // (175 000 req/s at 256, 157 000 at 2000 - one core, 2026-11-18).
+  // epoll - ⚠️ with corLibs' libmicrohttpd (tools/mhd/mhdBuild.sh), whose 0002-epoll-drain-timeout patch
+  // this NEEDS. MHD_epoll() calls epoll_wait() again after a full batch of 128 events, with the full
+  // timeout: when that batch was the last, every (edge-triggered) connection stalls until the clients give
+  // up - 256, 257 and 512 connections opened at once got a few hundred req/s (1.0.2, 1.0.10, and upstream
+  // master; reported upstream). Patched, epoll has no stall and a short tail; poll (corRest#61) has no
+  // stall but serves many connections unevenly - coraine, one core, GET of 20 entities: p99 9 / 16 / 77 ms
+  // at 256 / 512 / 1000 clients with epoll, 310 / 976 / 334 ms (and timeouts) with poll (2026-11-18).
   //
-  unsigned int flags = MHD_USE_SELECT_INTERNALLY | MHD_USE_POLL | MHD_ALLOW_SUSPEND_RESUME | MHD_ALLOW_UPGRADE | MHD_USE_ERROR_LOG;
+  unsigned int flags = MHD_USE_SELECT_INTERNALLY | MHD_USE_EPOLL | MHD_ALLOW_SUSPEND_RESUME | MHD_ALLOW_UPGRADE | MHD_USE_ERROR_LOG;
   size_t       memory = (connectionMemory != 0) ? connectionMemory : 32 * 1024;
 
   if ((keyPem != NULL) && (certPem != NULL))
@@ -917,7 +918,7 @@ int corRestBackendListen(const char* host, unsigned short port)
   }
 
   struct sockaddr_storage addr;
-  unsigned int            flags = MHD_USE_SELECT_INTERNALLY | MHD_USE_POLL | MHD_ALLOW_SUSPEND_RESUME | MHD_USE_ERROR_LOG;   // poll, not epoll: see corRestBackendStart
+  unsigned int            flags = MHD_USE_SELECT_INTERNALLY | MHD_USE_EPOLL | MHD_ALLOW_SUSPEND_RESUME | MHD_USE_ERROR_LOG;   // epoll: see corRestBackendStart (needs the patched libmicrohttpd)
   size_t                  memory = (connectionMemory != 0) ? connectionMemory : 32 * 1024;
 
   memset(&addr, 0, sizeof(addr));
