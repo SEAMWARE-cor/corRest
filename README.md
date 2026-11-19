@@ -1,7 +1,7 @@
 # corRest — REST Server & HTTP Client Library
 
 A compact REST layer for C: an HTTP **server** - on libmicrohttpd or on the
-built-in epoll server of [`corHttp`](https://github.com/SEAMWARE/corHttp), chosen at
+built-in epoll server of [`corHttp`](https://github.com/SEAMWARE-cor/corHttp), chosen at
 build time (`COR_HTTP_SERVER`) - with a flat, verb-indexed service table and fast wildcard URL matching, plus a full HTTP
 **client** (blocking, parallel-multi, connection-pooled, TLS). It is the transport
 layer under the coraine NGSI-LD context broker, but has no NGSI-LD dependency of
@@ -212,12 +212,12 @@ present (the build references `../<lib>/lib<lib>.a`).
 
 Sibling repos (one `.a` each):
 
-- [`corAlloc`](https://github.com/SEAMWARE/corAlloc) — arena allocator (`CorAlloc`)
-- [`corTree`](https://github.com/SEAMWARE/corTree) — the tree (`CorNode`)
-- [`corJson`](https://github.com/SEAMWARE/corJson) — JSON parsing and rendering
-- [`corBase`](https://github.com/SEAMWARE/corBase) — core utilities and the library log (`COR_LIB_*`)
-- [`corLog`](https://github.com/SEAMWARE/corLog) — logging and trace levels
-- [`corHttp`](https://github.com/SEAMWARE/corHttp) — the built-in HTTP server, with
+- [`corAlloc`](https://github.com/SEAMWARE-cor/corAlloc) — arena allocator (`CorAlloc`)
+- [`corTree`](https://github.com/SEAMWARE-cor/corTree) — the tree (`CorNode`)
+- [`corJson`](https://github.com/SEAMWARE-cor/corJson) — JSON parsing and rendering
+- [`corBase`](https://github.com/SEAMWARE-cor/corBase) — core utilities and the library log (`COR_LIB_*`)
+- [`corLog`](https://github.com/SEAMWARE-cor/corLog) — logging and trace levels
+- [`corHttp`](https://github.com/SEAMWARE-cor/corHttp) — the built-in HTTP server, with
   `COR_HTTP_SERVER=builtin` only
 
 System libraries: `libmicrohttpd` (HTTP server, with `COR_HTTP_SERVER=mhd`, the default), `openssl` (`ssl`/`crypto`, TLS
