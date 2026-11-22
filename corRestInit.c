@@ -60,6 +60,66 @@ static inline CorRestServiceVector* routesOf(void)
 
 // -----------------------------------------------------------------------------
 //
+// trailingSlashResolve - put back the trailing '/' corRestUrlPathNormalize took off, where it closed an empty last segment
+//
+// The strip is there for the collection resources the spec writes with a '/' - /entities/, /entities/{entityId}/attrs/:
+// the stripped path is that of a route that ends in a fixed segment. A '/' after a parameter value is something else:
+// the empty last segment of a longer route - PATCH /temporal/entities/{entityId}/attrs/{attrId}/ is Attribute Instance
+// by id with an empty instanceId (400), not Attribute by id (405) - RFC 3986 § 6.2.2.3 removes dot-segments only.
+//
+// The answer is the same for every verb (GET /entities/{id}/attrs/ is the collection: 405, not attribute-by-id with an
+// empty attrId), so all verbs' routes are asked. Where no route takes the '/' back, the strip stands (GET /entities/{id}/).
+//
+static void trailingSlashResolve(void)
+{
+  char* path     = corRest.in.urlPath;
+  int   len      = corRest.in.urlPathLen;
+  char* stripped = corAllocStrdup(&corRest.kalloc, path);
+  bool  matched  = false;
+
+  for (int v = 0; v < CorVerbs; v++)
+  {
+    CorRestService* sP = corRestServiceLookup(&routesOf()[v]);
+
+    strcpy(path, stripped);   // a wildcard match cuts the path short
+
+    if (sP == NULL)
+      continue;
+
+    if (sP->url[strlen(sP->url) - 1] != '*')
+      return;                 // a route ending in a fixed segment: a collection - the strip stands
+
+    matched = true;
+  }
+
+  if (matched == false)
+    return;
+
+  for (int v = 0; v < CorVerbs; v++)
+  {
+    path[len]     = '/';      // the buffer held the '/' before the strip
+    path[len + 1] = 0;
+
+    CorRestService* sP = corRestServiceLookup(&routesOf()[v]);
+
+    if (sP != NULL)
+    {
+      memcpy(path, stripped, len);    // the match cut the path short - back to <stripped>/
+      path[len]     = '/';
+      path[len + 1] = 0;
+      corRest.in.urlPathLen           = len + 1;
+      corRest.in.urlPathSlashStripped = false;
+      return;
+    }
+  }
+
+  strcpy(path, stripped);
+}
+
+
+
+// -----------------------------------------------------------------------------
+//
 // HTTPS server credentials (PEM contents, NULL == plain HTTP)
 //
 // Set by the broker for --https (--key, --cert), and by a test server such as
@@ -434,11 +494,16 @@ void corRestProcessRequest(void)
     corRest.serviceP = NULL;   // TRACE/CONNECT — no NGSI-LD service → 405 below
   }
   else
+  {
+    if (corRest.in.urlPathSlashStripped)
+      trailingSlashResolve();
+
     // Lookup service early — the parse hook needs to know the route so it can
     // tailor validation (e.g. batch ops surface per-element @context errors as
     // 207 entries instead of a global 400). serviceP may stay NULL here; the
     // 404/405 handling below still runs in that case.
     corRest.serviceP = corRestServiceLookup(&routesOf()[corRest.in.verb]);
+  }
 
   //
   // Admission (corRestSetAdmitHook) - before anything is done for the request: a client that is not
