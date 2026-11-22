@@ -121,13 +121,9 @@ void corRestStateInit(void* connection, const char* url, const char* method)
 // Routes are registered without a trailing slash; clients that send one
 // (e.g. ETSI test suite: POST /ngsi-ld/v1/entities/) would otherwise
 // 404 against an exact-match service lookup.
-// corRestProcessRequest puts the '/' back where it closed an empty last
-// segment of a longer route (urlPathSlashStripped tells it one was taken).
 //
 void corRestUrlPathNormalize(void)
 {
-  corRest.in.urlPathSlashStripped = false;
-
   if (corRest.in.urlPath == NULL)
     return;
 
@@ -137,7 +133,6 @@ void corRestUrlPathNormalize(void)
   {
     corRest.in.urlPath[corRest.in.urlPathLen - 1] = 0;
     corRest.in.urlPathLen--;
-    corRest.in.urlPathSlashStripped = true;
   }
 }
 

@@ -61,7 +61,6 @@ typedef struct CorRestIn
   char*       verbString;
   char*       urlPath;
   int         urlPathLen;
-  bool        urlPathSlashStripped;               // corRestUrlPathNormalize took a trailing '/' off urlPath
   char*       urlParams;                          // raw query string
   char*       wildcard[COR_REST_MAX_WILDCARDS];    // extracted wildcard values from URL
   int         wildcards;
