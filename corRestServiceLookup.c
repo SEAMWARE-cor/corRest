@@ -176,25 +176,27 @@ CorRestService* corRestServiceLookup(CorRestServiceVector* serviceV)
 
           if ((matchP = strstr(&corRest.in.urlPath[serviceP->charsBeforeFirstWildcard], serviceP->matchForSecondWildcard)) != NULL)
           {
-            char* wc0 = &corRest.in.urlPath[serviceP->charsBeforeFirstWildcard];
-            char* wc1 = &matchP[serviceP->matchForSecondWildcardLen];
+            char* wc0    = &corRest.in.urlPath[serviceP->charsBeforeFirstWildcard];
+            char* wc1    = &matchP[serviceP->matchForSecondWildcardLen];
+            char* wc1End = wc1 + strlen(wc1);
 
             // Literal suffix after the last wildcard (e.g. ".../attrs/*/value"):
-            // the URL must end with it, and the last wildcard is trimmed before
-            // it. A 0-length suffix (the common case) skips this entirely.
+            // the URL must end with it, and the last wildcard ends before it.
+            // A 0-length suffix (the common case) skips this entirely.
+            // The path is written only once the route matches: a 'continue' after a write left it cut short for
+            // the routes after this one.
             if (serviceP->matchAfterLastWildcardLen > 0)
             {
-              int wc1Len = (int) strlen(wc1);
-              if (wc1Len <= serviceP->matchAfterLastWildcardLen)
+              if (wc1End - wc1 <= serviceP->matchAfterLastWildcardLen)
                 continue;  // nothing left for the wildcard once the suffix is removed
-              char* suffixP = wc1 + wc1Len - serviceP->matchAfterLastWildcardLen;
-              if (strcmp(suffixP, serviceP->matchAfterLastWildcard) != 0)
+              wc1End -= serviceP->matchAfterLastWildcardLen;
+              if (strcmp(wc1End, serviceP->matchAfterLastWildcard) != 0)
                 continue;  // URL does not end with the required suffix
-              *suffixP = 0;  // trim the suffix → wc1 is the wildcard value alone
             }
 
-            // For non-greedy, first wildcard must be single component (no '/'),
-            // unless it's URL-form (scheme://...).
+            // For non-greedy, each wildcard must be single component (no '/'),
+            // unless it's URL-form (scheme://...) - else /entities/{id}/attrs/a/b
+            // matched attribute-by-id with attrId "a/b".
             if (!serviceP->greedy)
             {
               bool hasSlash = false;
@@ -208,11 +210,24 @@ CorRestService* corRestServiceLookup(CorRestServiceVector* serviceV)
               }
               if (hasSlash && !isUrlForm(wc0, matchP))
                 continue;
+
+              hasSlash = false;
+              for (char* p = wc1; p < wc1End; p++)
+              {
+                if (*p == '/')
+                {
+                  hasSlash = true;
+                  break;
+                }
+              }
+              if (hasSlash && !isUrlForm(wc1, wc1End))
+                continue;
             }
 
             corRest.in.wildcard[0] = wc0;
             corRest.in.wildcard[1] = wc1;
             *matchP = 0;
+            *wc1End = 0;   // a no-op without a suffix: wc1End is the path's own end
 
             return serviceP;
           }
