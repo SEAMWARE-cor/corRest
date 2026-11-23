@@ -1416,8 +1416,9 @@ int corRestResponseHeaderVBuild(CorRestKeyValue* hv, int max)
   // § 6.3.6 Prefer / Preference-Applied: when the client sent a
   // "Prefer: ngsi-ld=<x>" header, echo "Preference-Applied: ngsi-ld=<our-version>"
   // so they know what spec version the response body conforms to.
-  // We respond with our supported version regardless of <x> — full v1.9.1
-  // degradation per § 4.3.6.8 is not implemented.
+  // We respond with our supported version regardless of <x> — full
+  // degradation per § 4.3.6.8 is not implemented. The version is major.minor:
+  // TS 104 176 annex A.2.5.3 gives "ngsi-ld=1.3".
   for (int hi = 0; hi < corRest.in.httpHeaderCount; hi++)
   {
     if (corRest.in.httpHeaderV[hi].key != NULL &&
@@ -1425,7 +1426,7 @@ int corRestResponseHeaderVBuild(CorRestKeyValue* hv, int max)
         corRest.in.httpHeaderV[hi].value != NULL &&
         strncasecmp(corRest.in.httpHeaderV[hi].value, "ngsi-ld=", 8) == 0)
     {
-      HDR_ADD("Preference-Applied", "ngsi-ld=1.9.1");
+      HDR_ADD("Preference-Applied", "ngsi-ld=1.9");
       break;
     }
   }
