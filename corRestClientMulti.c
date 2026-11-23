@@ -17,13 +17,13 @@
 #include <errno.h>                               // errno
 #include <fcntl.h>                               // fcntl
 #include <poll.h>                                // poll
-#include <sys/epoll.h>                           // epoll_create1, epoll_ctl, epoll_wait
 #include <sys/socket.h>                          // socket, connect, recv, send, MSG_NOSIGNAL
 #include <netinet/in.h>                          // sockaddr_in
 #include <netinet/tcp.h>                         // TCP_NODELAY
 #include <netdb.h>                               // getaddrinfo, freeaddrinfo
 #include <time.h>                                // clock_gettime
 
+#include "corBase/corLinux.h"                    // epoll_create1, epoll_ctl, epoll_wait, MSG_NOSIGNAL (macOS: kqueue)
 #include "corBase/corCo.h"                      // corCoCurrent
 #include "corRest/corRestResolve.h"             // corRestResolve
 #if COR_WITH_CLIENT_PROXY

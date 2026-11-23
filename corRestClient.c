@@ -22,6 +22,7 @@
 #include <netinet/tcp.h>                         // TCP_NODELAY
 #include <netdb.h>                               // getaddrinfo, freeaddrinfo
 
+#include "corBase/corLinux.h"                    // MSG_NOSIGNAL (macOS: 0, SIGPIPE ignored)
 #include "corRest/corRestResolve.h"             // corRestResolve
 #include "corRest/corRestWait.h"                // corRestWaitFd
 #include "corRest/corRestClient.h"                 // CorRestClientConn, CorRestClientRequest, CorRestClientResponse

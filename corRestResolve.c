@@ -14,9 +14,9 @@
 #include <poll.h>                                   // POLLIN
 #include <pthread.h>                                // pthread_create
 #include <arpa/inet.h>                              // inet_pton
-#include <sys/eventfd.h>                            // eventfd
 #include <netdb.h>                                  // getaddrinfo, EAI_SYSTEM
 
+#include "corBase/corLinux.h"                    // eventfd, corEventfdSignal, corEventfdClose (macOS: a pipe)
 #include "corBase/corCo.h"                          // corCoCurrent
 
 #include "corRest/corRestWait.h"                    // corRestWaitFd
@@ -46,7 +46,7 @@ static void lookupRelease(Lookup* lP)
 
   if (lP->resP != NULL)
     freeaddrinfo(lP->resP);
-  close(lP->efd);
+  corEventfdClose(lP->efd);
   free(lP->host);
   free(lP->port);
   free(lP);
@@ -54,11 +54,10 @@ static void lookupRelease(Lookup* lP)
 
 static void* lookupThread(void* arg)
 {
-  Lookup*  lP  = (Lookup*) arg;
-  uint64_t one = 1;
+  Lookup* lP = (Lookup*) arg;
 
   lP->rc = getaddrinfo(lP->host, lP->port, &lP->hints, &lP->resP);
-  (void) !write(lP->efd, &one, sizeof(one));
+  corEventfdSignal(lP->efd);
 
   lookupRelease(lP);
   return NULL;

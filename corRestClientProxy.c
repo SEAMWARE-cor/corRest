@@ -27,6 +27,7 @@
 #include <sys/socket.h>                                // send, recv
 #include <time.h>                                      // clock_gettime
 
+#include "corBase/corLinux.h"                    // MSG_NOSIGNAL (macOS: 0, SIGPIPE ignored)
 #include "corBase/corUriPasswordMask.h"                // corUriPasswordMask
 
 #include "corRest/corRestClientProxy.h"                // Own interface
