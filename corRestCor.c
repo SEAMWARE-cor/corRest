@@ -41,9 +41,9 @@
 #include <sys/socket.h>                               // socket, setsockopt, accept, bind, listen
 #include <netinet/in.h>                               // sockaddr_in6
 #include <netinet/tcp.h>                              // TCP_NODELAY
-#include <sys/epoll.h>                                // epoll_create1, epoll_ctl, epoll_wait
 #include <fcntl.h>                                    // fcntl, O_NONBLOCK
 
+#include "corBase/corLinux.h"                    // epoll_create1, epoll_ctl, epoll_wait, MSG_NOSIGNAL (macOS: kqueue)
 #include "corLog/corLog.h"                            // COR_E, COR_W, COR_V
 #include "corAlloc/CorAlloc.h"                        // CorAlloc
 #include "corAlloc/corAlloc.h"                        // corAlloc, corAllocStrdup
