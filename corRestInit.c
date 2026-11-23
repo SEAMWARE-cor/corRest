@@ -604,7 +604,7 @@ void corRestProcessRequest(void)
     }
     else
     {
-      corRestProblem(404, COR_REST_ERROR_NOT_FOUND, "Not Found",
+      corRestProblem(404, COR_REST_ERROR_NOT_FOUND, "Unknown resource",
                     "%s %s is not a recognized resource",
                     corRest.in.verbString ? corRest.in.verbString : "?",
                     reqPath);
