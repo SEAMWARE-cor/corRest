@@ -14,6 +14,12 @@
 // what order - is on the other side of corRestBackend.h and is shared with the
 // built-in server. This file translates, and decides nothing.
 //
+
+//
+// COR_HTTP_SERVER=both: this file's functions under the suffix Mhd (corRestBackendTable.h)
+//
+#define COR_REST_BACKEND_SUFFIX Mhd
+
 #include <stdlib.h>                       // strtoull, malloc, free, realloc
 #include <string.h>                       // memcpy, strncmp
 #include <stdio.h>                        // fprintf
@@ -1005,3 +1011,31 @@ void corRestBackendStop(void)
     mhdDaemon = NULL;
   }
 }
+
+
+
+#if COR_HTTP_SERVER_MHD && COR_HTTP_SERVER_BUILTIN
+// -----------------------------------------------------------------------------
+//
+// corRestBackendTable - this server's functions, for corRestBackendSelect
+//
+const CorRestBackend corRestBackendTable =
+{
+  "mhd",
+  corRestBackendStart,
+  corRestBackendListen,
+  corRestBackendStop,
+  corRestBackendFinish,
+  corRestBackendResume,
+  corRestBackendLoops,
+  corRestHttpLoopsSet,
+  corRestConnectionMemorySet,
+#if COR_WITH_STREAM
+  corRestStreamWrite,
+  corRestStreamEnd
+#else
+  NULL,
+  NULL
+#endif
+};
+#endif

@@ -15,6 +15,10 @@
 #ifndef CORREST_STREAM_H_
 #define CORREST_STREAM_H_
 
+#if COR_HTTP_SERVER_MHD && COR_HTTP_SERVER_BUILTIN
+#include "corRest/corRestBackendTable.h"  // both servers in the build: the ten through the table selected at start
+#endif
+
 #include <stdbool.h>                      // bool
 
 
@@ -84,7 +88,9 @@ extern bool corRestStreamResponse(CorRestStreamOpen openFn, void* ctx);
 // len 0 writes nothing and says whether the client is still there - a client that closed its connection
 // while there was nothing to send is seen by it; an application that must know soon calls it now and then.
 //
+#ifndef COR_REST_BACKEND_VIA_TABLE
 extern bool corRestStreamWrite(CorRestStream* streamP, const char* data, int len);
+#endif
 
 
 
@@ -95,6 +101,8 @@ extern bool corRestStreamWrite(CorRestStream* streamP, const char* data, int len
 // From any thread, exactly once per stream - also after a write said false. Not used after this. Every
 // stream is ended before corRestStop: the server a stream is written through is gone after it.
 //
+#ifndef COR_REST_BACKEND_VIA_TABLE
 extern void corRestStreamEnd(CorRestStream* streamP);
+#endif
 
 #endif  // CORREST_STREAM_H_

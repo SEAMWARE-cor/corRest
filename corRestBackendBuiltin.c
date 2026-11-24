@@ -55,6 +55,12 @@
 // it arrived on. MHD needs none of this because MHD owns copies of its own and
 // keeps them until NOTIFY_COMPLETED.
 //
+
+//
+// COR_HTTP_SERVER=both: this file's functions under the suffix Builtin (corRestBackendTable.h)
+//
+#define COR_REST_BACKEND_SUFFIX Builtin
+
 #include <stdint.h>                              // intptr_t
 #include <unistd.h>                              // close
 #include <stdlib.h>                       // malloc, free
@@ -908,3 +914,31 @@ void corRestBackendStop(void)
 
   corHttpRunning = false;
 }
+
+
+
+#if COR_HTTP_SERVER_MHD && COR_HTTP_SERVER_BUILTIN
+// -----------------------------------------------------------------------------
+//
+// corRestBackendTable - this server's functions, for corRestBackendSelect
+//
+const CorRestBackend corRestBackendTable =
+{
+  "builtin",
+  corRestBackendStart,
+  corRestBackendListen,
+  corRestBackendStop,
+  corRestBackendFinish,
+  corRestBackendResume,
+  corRestBackendLoops,
+  corRestHttpLoopsSet,
+  corRestConnectionMemorySet,
+#if COR_WITH_STREAM
+  corRestStreamWrite,
+  corRestStreamEnd
+#else
+  NULL,
+  NULL
+#endif
+};
+#endif

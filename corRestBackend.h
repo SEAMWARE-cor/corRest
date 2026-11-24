@@ -25,6 +25,10 @@
 #include "corRest/CorRestKeyValue.h"      // CorRestKeyValue
 #include "corRest/CorRestState.h"         // CorRestState
 
+#if COR_HTTP_SERVER_MHD && COR_HTTP_SERVER_BUILTIN
+#include "corRest/corRestBackendTable.h"  // both servers in the build: the ten through the table selected at start
+#endif
+
 
 
 // -----------------------------------------------------------------------------
@@ -40,7 +44,9 @@
 //
 //   Returns 0, or -1 with a reason on stderr.
 //
+#ifndef COR_REST_BACKEND_VIA_TABLE
 extern int   corRestBackendStart(unsigned short port, int poolSize, char* keyPem, char* certPem);
+#endif
 
 
 
@@ -51,7 +57,9 @@ extern int   corRestBackendStart(unsigned short port, int poolSize, char* keyPem
 //
 //   Returns 0, or -1 with a reason on stderr - the built-in server has one listener.
 //
+#ifndef COR_REST_BACKEND_VIA_TABLE
 extern int   corRestBackendListen(const char* host, unsigned short port);
+#endif
 
 
 
@@ -73,7 +81,9 @@ extern int   corRestBackendListen(const char* host, unsigned short port);
 // alone listens, accepts every connection and deals them out in turn
 // (corHttpAcceptShare), and a connection stays with its loop for its whole life.
 //
+#ifndef COR_REST_BACKEND_VIA_TABLE
 extern void  corRestHttpLoopsSet(int loops);
+#endif
 
 
 
@@ -85,7 +95,9 @@ extern void  corRestHttpLoopsSet(int loops);
 // headers do not fit it is refused by libmicrohttpd itself - 414 (the URL) or 431 (the headers) - and said
 // in the log once per refusal, with what to do about it.
 //
+#ifndef COR_REST_BACKEND_VIA_TABLE
 extern void  corRestConnectionMemorySet(int kb);
+#endif
 
 
 
@@ -97,7 +109,9 @@ extern void  corRestConnectionMemorySet(int kb);
 // so that no connection is accepted while the pool is down. corRestHttpLoopsSet's value on the
 // built-in server, 1 on libmicrohttpd.
 //
+#ifndef COR_REST_BACKEND_VIA_TABLE
 extern int   corRestBackendLoops(void);
+#endif
 
 
 //
@@ -107,7 +121,9 @@ extern int   corRestBackendLoops(void);
 // the pool (drained) and THEN the backend - so the pool is up for as long as a connection can be
 // accepted, except in the shutdown window between the two stops.
 //
+#ifndef COR_REST_BACKEND_VIA_TABLE
 extern void  corRestBackendStop(void);
+#endif
 
 
 //
@@ -122,7 +138,9 @@ extern void  corRestBackendStop(void);
 // on the calling loop otherwise. libmicrohttpd: on its I/O thread, from the
 // request-completed callback (MHD_OPTION_NOTIFY_COMPLETED).
 //
+#ifndef COR_REST_BACKEND_VIA_TABLE
 extern void  corRestBackendFinish(CorRestState* stateP);
+#endif
 
 
 //
@@ -133,7 +151,9 @@ extern void  corRestBackendFinish(CorRestState* stateP);
 // itself - that belongs to whichever thread owns the connection - and both
 // backends therefore only hand the connection back to their event loop.
 //
+#ifndef COR_REST_BACKEND_VIA_TABLE
 extern void  corRestBackendResume(CorRestState* stateP);
+#endif
 
 
 
