@@ -38,10 +38,13 @@ DFLAGS        =
 # -O2 / -Werror here, which is what an instrumented build needs.
 #
 #
-# COR_HTTP_SERVER - which HTTP server this build carries. Two, and exactly one.
+# COR_HTTP_SERVER - which HTTP server this build carries.
 #
 #   mhd      libmicrohttpd, an external shared library
 #   builtin  the epoll server in this repo, no external dependency
+#   both     the two, one of them selected at start (corRestBackendSelect, corRestBackendTable.h): both
+#            backend files, each defining its functions under its own suffix, and calls through the table
+#            of the one selected. A build with one server calls its functions directly.
 #
 # Emitted as a 0/1 PAIR rather than one flag, so the source reads
 # `#if COR_HTTP_SERVER_MHD` and -Wundef turns a misspelling into a compile error
@@ -51,9 +54,8 @@ DFLAGS        =
 # In CFLAGS and not DFLAGS on purpose - see the note above: a caller who passes
 # DFLAGS on the command line would drop these along with every other default.
 #
-# The value picks the backend SOURCE FILE as well as the defines: the two
-# corRestBackend*.c files are alternatives, and compiling the unused one would
-# need the library it exists to avoid.
+# The value picks the backend SOURCE FILES as well as the defines: with one server the
+# other corRestBackend*.c is left out, as compiling it would need the library it exists to avoid.
 #
 COR_HTTP_SERVER ?= mhd
 ifeq ($(COR_HTTP_SERVER),mhd)
@@ -72,8 +74,13 @@ else ifeq ($(COR_HTTP_SERVER),builtin)
   # coraine's CMakeLists does.
   #
   HTTP_SERVER_ARCHIVE = ../corHttp/libcorHttp.a
+else ifeq ($(COR_HTTP_SERVER),both)
+  HTTP_SERVER_FLAGS   = -DCOR_HTTP_SERVER_MHD=1 -DCOR_HTTP_SERVER_BUILTIN=1
+  HTTP_SERVER_SOURCE  = corRestBackendMhd.c corRestBackendBuiltin.c corRestBackendSelect.c
+  HTTP_SERVER_LIBS    = -lmicrohttpd
+  HTTP_SERVER_ARCHIVE = ../corHttp/libcorHttp.a
 else
-  $(error COR_HTTP_SERVER must be 'mhd' or 'builtin', not '$(COR_HTTP_SERVER)')
+  $(error COR_HTTP_SERVER must be 'mhd', 'builtin' or 'both', not '$(COR_HTTP_SERVER)')
 endif
 
 #
