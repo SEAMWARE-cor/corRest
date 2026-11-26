@@ -17,12 +17,13 @@
 
 // -----------------------------------------------------------------------------
 //
-// isUrlForm - true if [s..end) starts with "<scheme>://" (RFC 3986 § 3.1)
+// isUrlForm - true if [s..end) is an IRI (it starts with "<scheme>:", RFC 3986 § 3.1) with a URL in it
+// ("://"): a URL itself (https://acme.example/ids/x), or a URN that carries one
+// (urn:ngsi-ld:AssetChannel:aas:https://acme.example/ids/x - a channel's id, its endpoint an AAS id)
 //
-// Used to let non-greedy wildcards accept URL-form NGSI-LD identifiers
-// (https://..., http://...) in a single path segment. URN-form (urn:...)
-// has no embedded '/' so passes the plain slash-check already; this only
-// matters for the URL flavor of an entity / attribute / context id.
+// Used to let non-greedy wildcards accept such NGSI-LD identifiers in a single path segment: the HTTP
+// server has decoded a %2F before the routing sees it. A plain URN (urn:ngsi-ld:T:1) has no '/' and passes the
+// slash-check already - and urn:ngsi-ld:T:1/attrs/x, which has no "://", is still no one segment.
 //
 static bool isUrlForm(const char* s, const char* end)
 {
@@ -36,7 +37,16 @@ static bool isUrlForm(const char* s, const char* end)
           *p == '+' || *p == '.' || *p == '-'))
     p++;
 
-  return (p + 2 < end) && p[0] == ':' && p[1] == '/' && p[2] == '/';
+  if ((p >= end) || (*p != ':'))
+    return false;                            // no scheme: no IRI
+
+  for (; p + 2 < end; p++)
+  {
+    if ((p[0] == ':') && (p[1] == '/') && (p[2] == '/'))
+      return true;
+  }
+
+  return false;
 }
 
 
