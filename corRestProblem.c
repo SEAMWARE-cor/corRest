@@ -50,7 +50,9 @@ void corRestProblemFunction
   // corLogOut() rather than COR_E(): COR_E captures __FILE__ and __LINE__ at ITS OWN
   // call site, which would point every problem the library reports at this line.
   //
-  corLogOut(fileName, lineNo, functionName, 'E', -1, "%d %s: %s", statusCode, title, corRest.out.problemDetail);
+  // A 404 is a W, not an E: "no such resource" is an answer, not a failure.
+  //
+  corLogOut(fileName, lineNo, functionName, (statusCode == 404)? 'W' : 'E', -1, "%d %s: %s", statusCode, title, corRest.out.problemDetail);
 }
 
 
@@ -78,7 +80,7 @@ void corRestProblemLateFunction
   vsnprintf(detail, sizeof(detail), fmt, ap);
   va_end(ap);
 
-  corLogOut(fileName, lineNo, functionName, 'E', -1, "%d %s: %s", statusCode, title, detail);
+  corLogOut(fileName, lineNo, functionName, (statusCode == 404)? 'W' : 'E', -1, "%d %s: %s", statusCode, title, detail);
 
   if (corRest.out.lateStatus != 0)                     // the first one is answered
     return;
